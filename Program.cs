@@ -1,9 +1,31 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using RazorPagesMovie.Data;
+using RazorPagesMovie.Models;
+using System.Globalization;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddDbContext<RazorPagesMovieContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("RazorPagesMovieContext") ?? throw new InvalidOperationException("Connection string 'RazorPagesMovieContext' not found.")));
+
+// Add globalization
+var cultureInfo = new CultureInfo("nl-NL");
+cultureInfo.NumberFormat.CurrencySymbol = "€";
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+CultureInfo.CurrentCulture = cultureInfo;
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+
+	SeedData.Initialize(services);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
